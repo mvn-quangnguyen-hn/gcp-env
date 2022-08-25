@@ -5,7 +5,6 @@ on:
         required: true
         type: string
 
-name: terraform plan
 env:
   GCP_ENV: ${{ secrets.GCP_ENV }}
   GCP_PROJECT: ${{ secrets.GCP_PROJECT }}
