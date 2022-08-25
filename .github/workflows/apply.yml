@@ -28,7 +28,6 @@ on:
         type: string
         required: false
 
-name: _Terraform Apply
 env:
   REGION: asia-northeast1
   GCP_ENV: ${{ secrets.GCP_ENV }}
