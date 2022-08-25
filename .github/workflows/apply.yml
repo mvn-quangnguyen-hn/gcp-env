@@ -28,7 +28,6 @@ on:
         type: string
         required: false
 
-name: _Terraform Apply
 env:
   REGION: asia-northeast1
   GCP_ENV: ${{ secrets.GCP_ENV }}
@@ -55,7 +54,7 @@ jobs:
           project_id: ${{ env.GCP_PROJECT }}
 
       - name: Remove default.tflock if exist
-        run: gsutil rm gs://${{ env.GCP_PROJECT }}-tfstate-files/default.tflock
+        run: gsutil rm gs://${{ env.GCP_PROJECT }}-tfstate-files/default.tflock || true
           
       - name: Render TFVARS
         uses: nowactions/envsubst@v1
