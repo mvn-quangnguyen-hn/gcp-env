@@ -29,7 +29,7 @@ jobs:
         with:
           project_id: ${{ env.GCP_PROJECT }}
 
-      - name: Create Terraform State Bucket, enable Object versioning, remove default.tflock if exist
+      - name: Create Terraform State Bucket, enable Object versioning, Remove default.tflock if exist
         run: |-
           gsutil mb -p ${{ env.GCP_PROJECT }} -b off -l asia-northeast1 gs://${{ env.GCP_PROJECT }}-tfstate-files/ || true
           gsutil versioning set on gs://${{ env.GCP_PROJECT }}-tfstate-files/
