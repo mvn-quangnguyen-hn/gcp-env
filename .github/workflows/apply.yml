@@ -53,6 +53,14 @@ jobs:
         with:
           project_id: ${{ env.GCP_PROJECT }}
 
+      - name: Enable APIs
+        run: |-
+          gcloud services enable compute.googleapis.com
+          echo "--------------------------------------------------------------"
+          echo "Enabled API list:"
+          echo "--------------------------------------------------------------"
+          gcloud services list
+
       - name: Remove default.tflock if exist
         run: gsutil rm gs://${{ env.GCP_PROJECT }}-tfstate-files/default.tflock || true
           
