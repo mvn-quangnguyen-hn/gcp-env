@@ -1,0 +1,82 @@
+on:
+  # push:
+  #   branches:
+  #     - develop
+  #     - staging
+  workflow_dispatch:
+    inputs:
+      environment:
+        type: choice
+        description: "Select the environment to deploy to:"
+        required: true
+        options:
+          - develop
+          - staging
+      auto_approve:
+        type: boolean
+        description: "Check this to automatically approve changes."
+        required: false
+        default: false
+      apply:
+        type: boolean
+        description: "Check this to apply all."
+        required: false
+        default: false
+      apply_target:
+        type: string
+        description: "Apply target: Sample: aws_s3_bucket.demo_bucket"
+        required: false
+      import:
+        type: string
+        description: "Import: Sample: aws_s3_bucket.demo_bucket an1-demo-bucket"
+        required: false
+      state_rm:
+        type: string
+        description: "State Remove: Sample: aws_s3_bucket.demo_bucket"
+        required: false
+      custom_command:
+        type: string
+        description: "Specify terraform custom command."
+        required: false
+      destroy:
+        type: string
+        description: "Destroy: Sample: aws_s3_bucket.demo_bucket"
+        required: false
+
+name: TERRAFORM APPLY
+
+jobs:
+  develop_apply:
+    name: PR Apply - Develop
+    uses: ./.github/workflows/apply.yml
+    if: github.event_name == 'push' && github.ref_name == 'develop'
+    with:
+      environment: develop
+      auto_approve: true
+      apply: true
+    secrets: inherit
+
+  staging_apply:
+    name: PR Apply - Staging
+    uses: ./.github/workflows/apply.yml
+    if: github.event_name == 'push' && github.ref_name == 'staging'
+    with:
+      environment: staging
+      auto_approve: true
+      apply: true
+    secrets: inherit
+
+  dispatch_apply:
+    name: Dispatch Apply
+    uses: ./.github/workflows/apply.yml
+    if: github.event_name == 'workflow_dispatch'
+    with:
+      environment: ${{ github.event.inputs.environment }}
+      auto_approve: ${{ github.event.inputs.auto_approve }}
+      apply: ${{ github.event.inputs.apply }}
+      apply_target: ${{ github.event.inputs.apply_target }}
+      import: ${{ github.event.inputs.import }}
+      state_rm: ${{ github.event.inputs.state_rm }}
+      custom_command: ${{ github.event.inputs.custom_command }}
+      destroy: ${{ github.event.inputs.destroy }}
+    secrets: inherit
