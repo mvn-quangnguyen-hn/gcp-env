@@ -32,7 +32,7 @@ jobs:
 
       - name: Create Terraform State Bucket and enable Object versioning
         run: |-
-          gsutil mb -p ${{ env.GCP_PROJECT }} -b off -l ${{ env.REGION }} gs://${{ env.GCP_PROJECT }}-tfstate-files/ || true
+          gsutil mb -p ${{ env.GCP_PROJECT }} -b off -l asia-northeast1 gs://${{ env.GCP_PROJECT }}-tfstate-files/ || true
           gsutil versioning set on gs://${{ env.GCP_PROJECT }}-tfstate-files/
 
       - name: Render TFVARS
@@ -75,7 +75,7 @@ jobs:
             echo "${plan:0:65536}" >> $GITHUB_ENV
             echo "EOF" >> $GITHUB_ENV
           fi
-          
+
       - name: Post Terraform Plan Result
         uses: actions/github-script@v6
         if: github.event_name == 'pull_request'
