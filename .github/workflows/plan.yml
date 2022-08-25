@@ -33,7 +33,7 @@ jobs:
         run: |-
           gsutil mb -p ${{ env.GCP_PROJECT }} -b off -l asia-northeast1 gs://${{ env.GCP_PROJECT }}-tfstate-files/ || true
           gsutil versioning set on gs://${{ env.GCP_PROJECT }}-tfstate-files/
-          gsutil rm gs://${{ env.GCP_PROJECT }}-tfstate-files/default.tflock
+          gsutil rm gs://${{ env.GCP_PROJECT }}-tfstate-files/default.tflock || true
 
       - name: Render TFVARS
         uses: nowactions/envsubst@v1
