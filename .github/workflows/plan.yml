@@ -32,6 +32,7 @@ jobs:
       - name: Enable APIs
         run: |-
           gcloud services enable compute.googleapis.com
+          gcloud services enable cloudresourcemanager.googleapis.com
           echo "--------------------------------------------------------------"
           echo "Enabled API list:"
           echo "--------------------------------------------------------------"
