@@ -1,0 +1,24 @@
+on:
+  pull_request:
+    branches:
+      - develop
+      - staging
+
+name: TERRAFORM PLAN
+
+jobs:
+  develop_plan:
+    name: PR Plan - Develop
+    uses: ./.github/workflows/plan.yml
+    if: github.base_ref == 'develop'
+    with:
+      environment: develop
+    secrets: inherit
+
+  staging_plan:
+    name: PR Plan - Staging
+    uses: ./.github/workflows/plan.yml
+    if: github.base_ref == 'staging'
+    with:
+      environment: staging
+    secrets: inherit
