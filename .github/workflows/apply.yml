@@ -1,0 +1,139 @@
+on:
+  workflow_call:
+    inputs:
+      environment:
+        type: string
+        required: true
+      auto_approve:
+        type: string
+        required: false
+        default: false
+      apply:
+        type: string
+        required: false
+        default: false
+      apply_target:
+        type: string
+        required: false
+      import:
+        type: string
+        required: false
+      state_rm:
+        type: string
+        required: false
+      custom_command:
+        type: string
+        required: false
+      destroy:
+        type: string
+        required: false
+
+env:
+  REGION: asia-northeast1
+  GCP_ENV: ${{ secrets.GCP_ENV }}
+  GCP_PROJECT: ${{ secrets.GCP_PROJECT }}
+  GCP_CREDENTIALS: ${{ secrets.GCP_SA_KEY }}
+
+jobs:
+  apply:
+    name: Applying Terraform - ${{ inputs.environment }}
+    environment: ${{ inputs.environment }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - id: "auth"
+        uses: "google-github-actions/auth@v0"
+        with:
+          credentials_json: "${{ env.GCP_CREDENTIALS }}"
+
+      - name: Setup Cloud SDK
+        uses: google-github-actions/setup-gcloud@v0
+        with:
+          project_id: ${{ env.GCP_PROJECT }}
+
+      - name: Enable APIs
+        run: |-
+          gcloud services enable compute.googleapis.com
+          echo "--------------------------------------------------------------"
+          echo "Enabled API list:"
+          echo "--------------------------------------------------------------"
+          gcloud services list
+
+      - name: Remove default.tflock if exist
+        run: gsutil rm gs://${{ env.GCP_PROJECT }}-tfstate-files/default.tflock || true
+          
+      - name: Render TFVARS
+        uses: nowactions/envsubst@v1
+        with:
+          input: ./config/${{ env.GCP_ENV }}.tfvars
+          output: ./terraform.tfvars
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v1
+        with:
+          terraform_version: 1.2.8
+
+      - name: Terraform Init
+        id: init
+        run: terraform init -reconfigure -backend=true -backend-config="bucket=${{ env.GCP_PROJECT }}-tfstate-files" -backend-config="credentials=$GOOGLE_APPLICATION_CREDENTIALS"
+
+      - name: Terraform Import
+        if: inputs.import != null
+        env:
+          TF_RESOURCE: ${{ inputs.import }}
+        run: terraform import --var-file=./terraform.tfvars ${{ env.TF_RESOURCE }}
+
+      - name: Terraform State Remove
+        if: inputs.state_rm != null
+        env:
+          TF_RESOURCE: ${{ inputs.state_rm }}
+        run: terraform state rm ${{ env.TF_RESOURCE }}
+
+      - name: Terraform Destroy
+        if: inputs.destroy != null
+        env:
+          TF_AUTO_APPROVE: ${{ inputs.auto_approve }}
+          TF_RESOURCE: ${{ inputs.destroy }}
+        run: |
+          if [[ ${{ env.TF_AUTO_APPROVE }} == 'true' ]]; then
+            terraform apply -destroy --var-file=./terraform.tfvars --target ${{ env.TF_RESOURCE }} -auto-approve
+          else
+            terraform plan -destroy --var-file=./terraform.tfvars --target ${{ env.TF_RESOURCE }}
+          fi
+
+      - name: Terraform Apply Target
+        if: inputs.apply_target != null
+        env:
+          TF_AUTO_APPROVE: ${{ inputs.auto_approve }}
+          TF_RESOURCE: ${{ inputs.apply_target }}
+        run: |
+          if [[ ${{ env.TF_AUTO_APPROVE }} == 'true' ]]; then
+            terraform apply --var-file=./terraform.tfvars --target ${{ env.TF_RESOURCE }} -auto-approve
+          else
+            terraform plan --var-file=./terraform.tfvars --target ${{ env.TF_RESOURCE }}
+          fi
+
+      - name: Terraform Custom Command
+        if: inputs.custom_command != null
+        env:
+          TF_AUTO_APPROVE: ${{ inputs.auto_approve }}
+          TF_COMMAND: ${{ inputs.custom_command }}
+        run: |
+          if [[ ${{ env.TF_AUTO_APPROVE }} == 'true' ]]; then
+            terraform ${{ env.TF_COMMAND }} --var-file=./terraform.tfvars -auto-approve
+          else
+            terraform ${{ env.TF_COMMAND }} --var-file=./terraform.tfvars
+          fi
+          
+      - name: Terraform Apply All
+        if: ${{ inputs.apply == 'true' }}
+        env:
+          TF_AUTO_APPROVE: ${{ inputs.auto_approve }}
+        run: |
+          if [[ ${{ env.TF_AUTO_APPROVE }} == 'true' ]]; then
+            terraform apply --var-file=./terraform.tfvars -auto-approve
+          else
+            terraform plan --var-file=./terraform.tfvars
+          fi
