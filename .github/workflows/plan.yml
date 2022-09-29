@@ -96,20 +96,27 @@ jobs:
           script: |
             const projectId = `${{ env.GCP_PROJECT }}`;
             const re = new RegExp(projectId, 'g')
+
             const planOutput = `
             #### 📖 Terraform Plan Result for \`${projectId}\`: \`${{ steps.plan.outcome }}\`
+
             <details><summary>Show Plan</summary>
+
             \`\`\`
             ${{ env.PLAN }}
             \`\`\`
+
             </details>
+
             This plan result will be updated when the \`Terraform Plan\` workflow re-run.`;
+
             // Get the existing comments.
             const {data: comments} = await github.rest.issues.listComments({
               owner: context.repo.owner,
               repo: context.repo.repo,
               issue_number: context.payload.number,
             });
+            
             // Find any comment already made by the bot.
             const botComments = comments.filter(comment => comment.user.id === 41898282);
             let isUpdated = false;
