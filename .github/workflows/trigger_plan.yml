@@ -13,6 +13,7 @@ jobs:
     if: github.base_ref == 'develop'
     with:
       environment: develop
+      issue_number: ${{ github.event.pull_request.number }}
     secrets: inherit
 
   staging_plan:
@@ -21,4 +22,5 @@ jobs:
     if: github.base_ref == 'staging'
     with:
       environment: staging
+      issue_number: ${{ github.event.pull_request.number }}
     secrets: inherit
